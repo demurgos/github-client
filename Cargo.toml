@@ -1,0 +1,42 @@
+[workspace]
+members = [
+    ".",
+    "./examples/*"
+]
+
+[package]
+name = "katal_github_client"
+version = "0.15.1"
+authors = ["Charles Samborski <demurgos@demurgos.net>"]
+description = "GitHub client"
+documentation = "https://docs.rs/github_client"
+homepage = "https://github.com/demurgos/github-client"
+repository = "https://github.com/demurgos/github-client"
+readme = "./README.md"
+keywords = ["github", "api"]
+license = "AGPL-3.0-or-later"
+edition = "2021"
+rust-version = "1.77.2"
+
+[dependencies]
+bytes = "1.6.0"
+chrono = "0.4.24"
+compact_str = "0.7.1"
+futures = "0.3.30"
+demurgos_headers = { version = "0.4.1", optional = true }
+http = { version = "1.1.0", optional = true }
+http-body = { version = "1.0.0", optional = true }
+http-body-util = { version = "0.1.1", optional = true }
+itoa = "1.0.6"
+reqwest = { version = "0.11.14", optional = true, default-features = false, features = ["json", "rustls-tls"] }
+serde = { version = "1.0.155", features = ["derive"], optional = true }
+serde_json = { version = "1.0.94", features = ["preserve_order"], optional = true }
+thiserror = "1.0.40"
+tower-service = "0.3.2"
+url = { version = "2.3.1" }
+
+[features]
+default = []
+serde = ["dep:serde", "bytes/serde", "compact_str/serde", "chrono/serde", "url/serde"]
+http = ["dep:demurgos_headers", "dep:http", "dep:http-body", "dep:http-body-util", "dep:serde_json", "serde"]
+reqwest = ["dep:reqwest", "dep:serde_json", "serde"]
