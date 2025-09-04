@@ -17,8 +17,8 @@ impl NamespaceId {
   /// Calls `f` with the string representation of this id as an argument.
   #[inline]
   pub fn with_str<R, F>(self, f: F) -> R
-    where
-      F: for<'a> FnOnce(&'a str) -> R,
+  where
+    F: for<'a> FnOnce(&'a str) -> R,
   {
     let mut buf = ::itoa::Buffer::new();
     f(buf.format(self.0))

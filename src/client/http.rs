@@ -1,4 +1,5 @@
-use crate::common::release::{Release};
+use crate::common::project::RepositoryRef;
+use crate::common::release::Release;
 use crate::common::Page;
 use crate::context::{GetRef, GithubUrl};
 use crate::query::get_project_release_list::GetProjectReleaseListQuery;
@@ -18,7 +19,6 @@ use http_body_util::{BodyExt, Full};
 use std::error::Error as StdError;
 use tower_service::Service;
 use url::Url;
-use crate::common::project::RepositoryRef;
 
 pub struct HttpGithubClient<TyInner> {
   inner: TyInner,
@@ -77,12 +77,8 @@ where
     let mut url: Url = {
       let base = GetRef::<GithubUrl>::get_ref(&req.context);
       match req.repository.as_view() {
-        RepositoryRef::Id(repo_id) => {
-          repo_id.with_str(|repo_id| base.url_join(["repositories", repo_id, "releases"]))
-        },
-        RepositoryRef::Slug(slug) => {
-          base.url_join(["repos", slug.owner, slug.name, "releases"])
-        },
+        RepositoryRef::Id(repo_id) => repo_id.with_str(|repo_id| base.url_join(["repositories", repo_id, "releases"])),
+        RepositoryRef::Slug(slug) => base.url_join(["repos", slug.owner, slug.name, "releases"]),
       }
     };
 
@@ -97,7 +93,7 @@ where
 
     let req = Request::builder()
       .method(Method::GET)
-      .uri(dbg!(url.as_str()))
+      .uri(url.as_str())
       .header(CONTENT_TYPE, "application/vnd.github+json")
       .user_agent(GetRef::<UserAgent>::get_ref(&req.context))
       .github_auth(req.auth.as_ref().map(GithubAuth::as_view))

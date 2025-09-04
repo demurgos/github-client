@@ -1,15 +1,15 @@
 pub use ::chrono;
 pub use ::compact_str;
-use compact_str::CompactString;
 #[cfg(feature = "http")]
 pub use ::demurgos_headers::UserAgent;
 #[cfg(feature = "reqwest")]
 pub use ::reqwest;
 #[cfg(feature = "serde")]
 pub use ::serde;
-use std::future::Future;
 pub use ::tower_service;
 pub use ::url;
+use compact_str::CompactString;
+use std::future::Future;
 
 use crate::common::release::Release;
 use crate::common::Page;
