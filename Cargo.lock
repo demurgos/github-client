@@ -813,7 +813,7 @@ dependencies = [
 
 [[package]]
 name = "katal_github_client"
-version = "0.15.2"
+version = "0.15.3"
 dependencies = [
  "bytes",
  "chrono",
