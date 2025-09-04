@@ -6,7 +6,7 @@ members = [
 
 [package]
 name = "katal_github_client"
-version = "0.15.1"
+version = "0.15.2"
 authors = ["Charles Samborski <demurgos@demurgos.net>"]
 description = "GitHub client"
 documentation = "https://docs.rs/github_client"
