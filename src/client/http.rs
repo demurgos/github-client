@@ -1,21 +1,18 @@
-use crate::common::package::GenericPackageFile;
-use crate::common::release::{InputReleaseAssetsView, Release, ReleaseLink};
-use crate::common::tree::TreeRecord;
+use crate::common::release::{Release};
 use crate::common::Page;
 use crate::context::{GetRef, GithubUrl};
 use crate::query::get_project_release_list::GetProjectReleaseListQuery;
 use crate::query::get_project_release_list_page::GetProjectReleaseListPageQuery;
 use crate::url_util::UrlExt;
-use crate::{GithubAuth, GithubAuthView, InputPackageStatus, Project};
+use crate::{GithubAuth, GithubAuthView};
 use bytes::Bytes;
-use chrono::{DateTime, Utc};
 use compact_str::CompactString;
 use core::task::{Context, Poll};
 use demurgos_headers::link::{Link, RelationType};
 use demurgos_headers::UserAgent;
 use futures::future::BoxFuture;
 use http::header::CONTENT_TYPE;
-use http::{HeaderMap, Method, Request, Response, StatusCode};
+use http::{HeaderMap, Method, Request, Response};
 use http_body::Body;
 use http_body_util::{BodyExt, Full};
 use std::error::Error as StdError;
@@ -54,7 +51,7 @@ pub enum HttpGithubClientError {
   Other(String),
 }
 
-impl<'req, Cx, TyInner, TyBody> Service<&'req GetProjectReleaseListQuery<Cx>> for HttpGithubClient<TyInner>
+impl<'req, Cx, TyInner, TyBody, Str> Service<&'req GetProjectReleaseListQuery<Cx, Str>> for HttpGithubClient<TyInner>
 where
   Cx: GetRef<GithubUrl> + GetRef<UserAgent>,
   TyInner: Service<Request<Full<Bytes>>, Response = Response<TyBody>> + 'req,
@@ -63,6 +60,7 @@ where
   TyBody: Body + Send,
   TyBody::Data: Send,
   TyBody::Error: StdError,
+  Str: AsRef<str>,
 {
   type Response = Page<Release>;
   type Error = HttpGithubClientError;
@@ -75,7 +73,7 @@ where
       .map_err(|e| HttpGithubClientError::PollReady(format!("{e:?}")))
   }
 
-  fn call(&mut self, req: &'req GetProjectReleaseListQuery<Cx>) -> Self::Future {
+  fn call(&mut self, req: &'req GetProjectReleaseListQuery<Cx, Str>) -> Self::Future {
     let mut url: Url = {
       let base = GetRef::<GithubUrl>::get_ref(&req.context);
       match req.repository.as_view() {
@@ -246,20 +244,6 @@ impl RequestBuilderExt for http::request::Builder {
       self.header(key, value)
     } else {
       self
-    }
-  }
-}
-
-trait BoolExt {
-  fn as_str(&self) -> &'static str;
-}
-
-impl BoolExt for bool {
-  fn as_str(&self) -> &'static str {
-    if *self {
-      "true"
-    } else {
-      "false"
     }
   }
 }

@@ -1,6 +1,7 @@
 use bytes::Bytes;
 use http_body_util::Full;
 use hyper_tls::HttpsConnector;
+use hyper_util::client::legacy::connect::HttpConnector;
 use hyper_util::client::legacy::Client;
 use katal_github_client::client::http::HttpGithubClient;
 use katal_github_client::common::project::{ProjectSlug, RepositoryRef};
@@ -25,7 +26,7 @@ async fn main() {
   let connector = HttpsConnector::new();
   let client: Client<HttpsConnector<_>, Full<Bytes>> =
     Client::builder(hyper_util::rt::TokioExecutor::new()).build(connector);
-  let mut client = HttpGithubClient::new(client);
+  let mut client: HttpGithubClient<Client<HttpsConnector<HttpConnector>, Full<Bytes>>> = HttpGithubClient::new(client);
   let context = Context::new()
     .set_github_url(GithubUrl(Url::parse("https://api.github.com/").unwrap()))
     .set_user_agent(UserAgent::from_static("katal_github_client_example/0.0.0"));
@@ -45,7 +46,7 @@ async fn main() {
   //   }
   // }
   {
-    let mut query = GetProjectReleaseListQuery::<_>::new(RepositoryRef::Slug(ProjectSlug::new(
+    let mut query = GetProjectReleaseListQuery::<_, _>::new(RepositoryRef::Slug(ProjectSlug::new(
       CompactString::new("unicode-org"),
       CompactString::new("icu"),
     )))
@@ -55,7 +56,7 @@ async fn main() {
     eprintln!("successfully fetched first page. count={:?}", res.items.len());
     // eprintln!("successfully fetched first page. last={:?}", res.last);
     while let Some(next) = res.next {
-      let mut query = GetProjectReleaseListPageQuery::<_>::new(next).set_context(context.clone());
+      let mut query = GetProjectReleaseListPageQuery::<_, _>::new(next).set_context(context.clone());
       query.auth = authentication.clone();
       res = client.get_project_release_list_page(&query).await.unwrap();
       eprintln!("successfully got page. count={:?}", res.items.len());

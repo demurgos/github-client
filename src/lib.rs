@@ -1,22 +1,21 @@
 pub use ::chrono;
 pub use ::compact_str;
+use compact_str::CompactString;
 #[cfg(feature = "http")]
 pub use ::demurgos_headers::UserAgent;
 #[cfg(feature = "reqwest")]
 pub use ::reqwest;
 #[cfg(feature = "serde")]
 pub use ::serde;
+use std::future::Future;
 pub use ::tower_service;
 pub use ::url;
-use compact_str::CompactString;
-use std::future::Future;
 
-use crate::common::project::Project;
+use crate::common::release::Release;
 use crate::common::Page;
 use crate::query::get_project_release_list::GetProjectReleaseListQuery;
-use tower_service::Service;
-use crate::common::release::Release;
 use crate::query::get_project_release_list_page::GetProjectReleaseListPageQuery;
+use tower_service::Service;
 
 pub mod client;
 pub mod common;
@@ -26,41 +25,59 @@ pub mod http;
 pub mod query;
 pub mod url_util;
 
-pub trait GithubClient<Cx>: Send + Sync {
-  type Error<'req>
+pub trait GithubClient<Cx, Str>: Send + Sync {
+  type GetProjectReleaseListError<'req>
   where
-    Cx: 'req;
+    Cx: 'req,
+    Str: 'req;
 
   fn get_project_release_list(
     self,
-    query: &GetProjectReleaseListQuery<Cx>,
-  ) -> impl Send + Future<Output = Result<Page<Release>, Self::Error<'_>>>;
+    query: &GetProjectReleaseListQuery<Cx, Str>,
+  ) -> impl Send + Future<Output = Result<Page<Release>, Self::GetProjectReleaseListError<'_>>>;
+
+  type GetProjectReleaseListPageError<'req>
+  where
+    Cx: 'req,
+    Str: 'req;
 
   fn get_project_release_list_page(
     self,
-    query: &GetProjectReleaseListPageQuery<Cx>,
-  ) -> impl Send + Future<Output = Result<Page<Release>, Self::Error<'_>>>;
+    query: &GetProjectReleaseListPageQuery<Cx, Str>,
+  ) -> impl Send + Future<Output = Result<Page<Release>, Self::GetProjectReleaseListPageError<'_>>>;
 }
 
-impl<S, Cx> GithubClient<Cx> for &'_ mut S
+impl<S, Cx, Str> GithubClient<Cx, Str> for &'_ mut S
 where
   Self: Send + Sync,
-  Cx: 'static + Send + Sync,
-  for<'req> S: Service<&'req GetProjectReleaseListQuery<Cx>, Response = Page<Release>>,
-  for<'req> <S as Service<&'req GetProjectReleaseListQuery<Cx>>>::Future: Send,
-  for<'req> S: Service<&'req GetProjectReleaseListPageQuery<Cx>, Response = Page<Release>, Error = <S as Service<&'req GetProjectReleaseListQuery<Cx>>>::Error>,
-  for<'req> <S as Service<&'req GetProjectReleaseListPageQuery<Cx>>>::Future: Send,
+  Cx: Send + Sync,
+  Str: Send + Sync,
+  for<'req> S: Service<&'req GetProjectReleaseListQuery<Cx, Str>, Response = Page<Release>, Future: Send>,
+  for<'req> S: Service<&'req GetProjectReleaseListPageQuery<Cx, Str>, Response = Page<Release>, Future: Send>,
 {
-  type Error<'req>
-    = <S as Service<&'req GetProjectReleaseListQuery<Cx>>>::Error
+  type GetProjectReleaseListError<'req>
+    = <S as Service<&'req GetProjectReleaseListQuery<Cx, Str>>>::Error
   where
-    Cx: 'req;
+    Cx: 'req,
+    Str: 'req;
 
-  async fn get_project_release_list(self, query: &GetProjectReleaseListQuery<Cx>) -> Result<Page<Release>, Self::Error<'_>> {
+  async fn get_project_release_list(
+    self,
+    query: &GetProjectReleaseListQuery<Cx, Str>,
+  ) -> Result<Page<Release>, Self::GetProjectReleaseListError<'_>> {
     self.call(query).await
   }
 
-  async fn get_project_release_list_page(self, query: &GetProjectReleaseListPageQuery<Cx>) -> Result<Page<Release>, Self::Error<'_>> {
+  type GetProjectReleaseListPageError<'req>
+    = <S as Service<&'req GetProjectReleaseListPageQuery<Cx, Str>>>::Error
+  where
+    Cx: 'req,
+    Str: 'req;
+
+  async fn get_project_release_list_page(
+    self,
+    query: &GetProjectReleaseListPageQuery<Cx, Str>,
+  ) -> Result<Page<Release>, Self::GetProjectReleaseListPageError<'_>> {
     self.call(query).await
   }
 }

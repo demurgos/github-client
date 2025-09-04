@@ -1,13 +1,12 @@
 use crate::context::EmptyContext;
 use crate::GithubAuth;
-use compact_str::CompactString;
 
 /// Get a page from the project release list
 ///
 /// <https://docs.github.com/en/rest/releases/releases?apiVersion=2022-11-28#list-releases>
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct GetProjectReleaseListPageQuery<Cx, Str = CompactString> {
+pub struct GetProjectReleaseListPageQuery<Cx, Str> {
   pub context: Cx,
   pub auth: Option<GithubAuth<Str>>,
   pub cursor: Str,

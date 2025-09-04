@@ -2,14 +2,13 @@ use crate::common::project::RepositoryRef;
 use crate::common::Pagination;
 use crate::context::EmptyContext;
 use crate::GithubAuth;
-use compact_str::CompactString;
 
 /// List project releases
 ///
 /// <https://docs.github.com/en/rest/releases/releases?apiVersion=2022-11-28#list-releases>
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct GetProjectReleaseListQuery<Cx, Str = CompactString> {
+pub struct GetProjectReleaseListQuery<Cx, Str> {
   pub context: Cx,
   pub auth: Option<GithubAuth<Str>>,
   pub pagination: Option<Pagination>,
